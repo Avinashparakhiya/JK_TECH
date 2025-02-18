@@ -10,6 +10,8 @@ import {
   import * as bcrypt from 'bcrypt';
   import { Document } from '../../documents/entities/document.entity'; // Import Document entity
   
+  export type UserRole = 'viewer' | 'editor' | 'admin';
+
   @Entity('users')
   export class User {
     @PrimaryGeneratedColumn('uuid')
@@ -27,7 +29,7 @@ import {
     @Column({ default: true })
     isActive: boolean;
   
-    @Column({ nullable: true })
+    @Column({ type: 'enum', enum: ['viewer', 'editor', 'admin'], default: 'viewer' })
     role: UserRole;
   
     @CreateDateColumn()
@@ -47,11 +49,5 @@ import {
     // Relationship with documents (One user can have many documents)
     @OneToMany(() => Document, (document) => document.user)
     documents: Document[];
-  }
-  
-  export enum UserRole {
-    ADMIN = 'admin',
-    EDITOR = 'editor',
-    VIEWER = 'viewer',
   }
   

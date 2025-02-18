@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+// filepath: /C:/Users/user/Documents/jk_tech/src/users/users.service.ts
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RegisterUserDto } from '../auth/dto/register-user.dto';
+import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -11,46 +13,45 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  /**
-   * Create a new user
-   * @param registerUserDto - Data transfer object for creating a user
-   */
   async create(registerUserDto: RegisterUserDto): Promise<User> {
-    const user = this.userRepository.create(registerUserDto); // Create a new instance of the User entity
-
-    try {
-      return await this.userRepository.save(user); // Save the new user to the database
-    } catch (error) {
-      throw new Error('Error creating user');
-    }
+    const user = this.userRepository.create(registerUserDto);
+    user.role = 'viewer'; // Default role is viewer
+    return this.userRepository.save(user);
   }
 
-  /**
-   * Get a user by ID
-   * @param id - User ID
-   */
-  async findById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
-
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    return user;
+  async findById(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
   }
 
-  /**
-   * Get all users
-   */
   async findAll(): Promise<User[]> {
-    return this.userRepository.find(); // Fetch all users from the database
+    return this.userRepository.find();
   }
 
-  /**
-   * Get a user by email
-   * @param email - User email
-   */
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    // Only allow role changes if the current user is an admin
+    if (updateUserDto.role && updateUserDto.role !== user.role) {
+      const currentUser = await this.getCurrentUser(); // Implement this method to get the current user from the JWT
+      if (!currentUser || currentUser.role !== 'admin') {
+        throw new ForbiddenException('Only admins can change roles.');
+      }
+    }
+
+    Object.assign(user, updateUserDto);
+    return this.userRepository.save(user);
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    // Implement this method to get the current user from the JWT
+    // This is just a placeholder implementation
+    return this.userRepository.findOne({ where: { id: 'current-user-id' } });
   }
 }
