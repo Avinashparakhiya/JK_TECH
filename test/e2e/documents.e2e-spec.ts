@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
 describe('DocumentsController (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
+  const logger = new Logger('DocumentsController (e2e)');
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,6 +15,7 @@ describe('DocumentsController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    logger.log('Application initialized');
 
     const response = await request(app.getHttpServer())
       .post('/auth/login')
@@ -21,13 +23,16 @@ describe('DocumentsController (e2e)', () => {
       .expect(200);
 
     accessToken = response.body.access_token;
+    logger.log('User logged in and access token obtained');
   });
 
   afterAll(async () => {
     await app.close();
+    logger.log('Application closed');
   });
 
   it('/documents (GET)', () => {
+    logger.log('Testing /documents (GET)');
     return request(app.getHttpServer())
       .get('/documents')
       .set('Authorization', `Bearer ${accessToken}`)
@@ -35,6 +40,7 @@ describe('DocumentsController (e2e)', () => {
   });
 
   it('/documents/:id (DELETE)', () => {
+    logger.log('Testing /documents/:id (DELETE)');
     return request(app.getHttpServer())
       .delete('/documents/1')
       .set('Authorization', `Bearer ${accessToken}`)

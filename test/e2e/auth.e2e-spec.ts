@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
+  const logger = new Logger('AuthController (e2e)');
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -13,13 +14,16 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    logger.log('Application initialized');
   });
 
   afterAll(async () => {
     await app.close();
+    logger.log('Application closed');
   });
 
   it('/auth/register (POST)', () => {
+    logger.log('Testing /auth/register (POST)');
     return request(app.getHttpServer())
       .post('/auth/register')
       .send({ email: 'test@example.com', password: 'password' })
@@ -27,6 +31,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('/auth/login (POST)', () => {
+    logger.log('Testing /auth/login (POST)');
     return request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'test@example.com', password: 'password' })
