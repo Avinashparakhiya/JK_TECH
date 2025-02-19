@@ -3,8 +3,9 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
-describe('AuthController (e2e)', () => {
+describe('DocumentsController (e2e)', () => {
   let app: INestApplication;
+  let accessToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -13,26 +14,30 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'test@example.com', password: 'password' })
+      .expect(200);
+
+    accessToken = response.body.access_token;
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('/auth/register (POST)', () => {
+  it('/documents (GET)', () => {
     return request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'test@example.com', password: 'password' })
-      .expect(201);
+      .get('/documents')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
   });
 
-  it('/auth/login (POST)', () => {
+  it('/documents/:id (DELETE)', () => {
     return request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email: 'test@example.com', password: 'password' })
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toHaveProperty('access_token');
-      });
+      .delete('/documents/1')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
   });
 });

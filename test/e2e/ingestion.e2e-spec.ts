@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
-describe('UsersController (e2e)', () => {
+describe('IngestionController (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
 
@@ -27,16 +27,16 @@ describe('UsersController (e2e)', () => {
     await app.close();
   });
 
-  it('/users (GET)', () => {
+  it('/ingestion/total-users-by-role (GET)', () => {
     return request(app.getHttpServer())
-      .get('/users')
+      .get('/ingestion/total-users-by-role')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
   });
 
-  it('/users/:id (GET)', () => {
+  it('/ingestion/documents-uploaded-by-role (GET)', () => {
     return request(app.getHttpServer())
-      .get('/users/1')
+      .get('/ingestion/documents-uploaded-by-role')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
   });
