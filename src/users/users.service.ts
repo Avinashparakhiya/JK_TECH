@@ -19,12 +19,12 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+  async findAllActive(): Promise<User[]> {
+    return this.userRepository.find({ where: { isActive: true } });
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async findActiveById(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id, isActive: true } });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -32,7 +32,7 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.findById(id);
+    const user = await this.findActiveById(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found.`);
     }
@@ -53,5 +53,14 @@ export class UsersService {
     // Implement this method to get the current user from the JWT
     // This is just a placeholder implementation
     return this.userRepository.findOne({ where: { id: 'current-user-id' } });
+  }
+
+  async softDelete(id: string): Promise<void> {
+    const user = await this.findActiveById(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+    user.isActive = false;
+    await this.userRepository.save(user);
   }
 }

@@ -10,11 +10,11 @@ import { Document } from './documents/entities/document.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'password',
-      database: 'test',
+      host: 'sql12.freesqldatabase.com',
+      port: 3306,
+      username: 'sql12763500',
+      password: 'ZUMDr97Gbs',
+      database: 'sql12763500',
       entities: [User, Document],
       synchronize: true,
     }),
