@@ -12,5 +12,5 @@ export class RegisterUserDto {
 
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  name: string;
 }

@@ -13,6 +13,9 @@ export class AuthService {
 
   async register(registerUserDto: RegisterUserDto) {
     const { password } = registerUserDto;
+    if (!password) {
+      throw new Error('Password is required');
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     return this.usersService.create({
       ...registerUserDto,
