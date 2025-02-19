@@ -6,6 +6,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { User } from './users/entities/user.entity';
 import { Document } from './documents/entities/document.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { Document } from './documents/entities/document.entity';
       },
       inject: [ConfigService],
     }),
+    AuthModule,
     UsersModule,
     DocumentsModule,
     IngestionModule,

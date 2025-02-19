@@ -21,7 +21,7 @@ import {
     email: string;
   
     @Column()
-    fullName: string;
+    name: string;
   
     @Column()
     password: string;

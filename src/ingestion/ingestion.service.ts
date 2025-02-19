@@ -32,7 +32,7 @@ export class IngestionService {
     const result = users
       .filter(user => user.role === 'admin' || user.role === 'editor')
       .map(user => ({
-        user: user.fullName,
+        user: user.name,
         role: user.role,
         documents: user.documents.map(doc => ({ id: doc.id, title: doc.title })),
       }));
@@ -50,7 +50,7 @@ export class IngestionService {
     return documents.map(doc => ({
       id: doc.id,
       title: doc.title,
-      uploadedBy: doc.user.fullName,
+      uploadedBy: doc.user.name,
     }));
   }
 }
