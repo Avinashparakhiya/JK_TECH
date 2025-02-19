@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from './entities/document.entity';
@@ -33,5 +33,30 @@ export class DocumentsService {
     }
 
     return this.documentRepository.save(document); // Save the document to the database
+  }
+
+  async findAllWithUser(): Promise<Document[]> {
+    return this.documentRepository.find({ relations: ['user'] });
+  }
+
+  async softDeleteDocument(id: string): Promise<void> {
+    const document = await this.documentRepository.findOne({ where: { id } });
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${id} not found.`);
+    }
+    document.isActive = false;
+    document.modifiedAt = new Date(); // Update modifiedAt timestamp
+    await this.documentRepository.save(document);
+  }
+
+  async updateDocumentContent(id: string, file: Multer.File): Promise<Document> {
+    const document = await this.documentRepository.findOne({ where: { id } });
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${id} not found.`);
+    }
+
+    document.content = file.buffer.toString();
+    document.modifiedAt = new Date(); // Update modifiedAt timestamp
+    return this.documentRepository.save(document);
   }
 }
