@@ -9,10 +9,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET, // Use environment variable or default secret key
+      secretOrKey: "!@##$$%^&" , // Use environment variable or default secret key
     });
   }
-
+  
   async validate(payload: any) {
     const user = await this.usersService.findById(payload.sub);
     if (!user) {

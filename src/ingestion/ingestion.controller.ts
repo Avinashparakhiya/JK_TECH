@@ -3,6 +3,7 @@ import { IngestionService } from './ingestion.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('ingestion')
 @Controller('ingestion')
@@ -10,7 +11,7 @@ export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 
   @Get('total-users-by-role')
-  @UseGuards(RolesGuard)
+   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get total number of users by role' })
@@ -20,7 +21,7 @@ export class IngestionController {
   }
 
   @Get('documents-uploaded-by-role')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get number of documents uploaded by each role' })
@@ -30,7 +31,7 @@ export class IngestionController {
   }
 
   @Get('documents-uploaded-by-user')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get documents uploaded by each user for admin and editor roles' })
@@ -40,7 +41,7 @@ export class IngestionController {
   }
 
   @Get('total-documents-uploaded-by-admin-and-editor')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get total documents uploaded by admin and editor' })
@@ -50,7 +51,7 @@ export class IngestionController {
   }
 
   @Get('all-documents-with-user')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all documents with the user who uploaded them' })

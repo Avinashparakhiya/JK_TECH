@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { Multer } from 'multer';
 import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('documents')
 @Controller('documents')
@@ -12,7 +13,7 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post('upload')
-  @UseGuards(RolesGuard)
+   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('editor', 'admin')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 1 * 1024 * 1024 } })) // 1 MB limit
   @ApiBearerAuth()
@@ -28,7 +29,7 @@ export class DocumentsController {
   }
 
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('editor', 'admin', 'viewer')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all documents' })
@@ -38,7 +39,7 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('editor', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a document' })
@@ -50,7 +51,7 @@ export class DocumentsController {
   }
 
   @Put(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('editor', 'admin')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 1 * 1024 * 1024 } })) // 1 MB limit
   @ApiBearerAuth()

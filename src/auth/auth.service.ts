@@ -18,24 +18,37 @@ export class AuthService {
         throw new HttpException(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`, HttpStatus.BAD_REQUEST);
       }
     }
+    // Check if the email already exists
+    const existingUser = await this.usersService.findByEmail(registerUserDto.email);
+    if (existingUser) {
+      throw new HttpException('Your email is already registered. Please log in.', HttpStatus.BAD_REQUEST);
+    }
 
-    const { password } = registerUserDto;
-    const hashedPassword = await bcrypt.hash(password, 10);
     return this.usersService.create({
-      ...registerUserDto,
-      password: hashedPassword,
+      ...registerUserDto
     });
   }
 
   async validateUser(email: string, password: string): Promise<any> {
-    console.log('Validating user in AuthService:', email);
+    // Fetch user by email
     const user = await this.usersService.findByEmail(email);
-    console.log('user:', user);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
+
+    if (!user) {
+      throw new HttpException(
+        'Your email is not registered. Please register and login.',
+        HttpStatus.BAD_REQUEST
+      );
+    }  
+    // Compare plaintext password with the hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return null;
+
+    // Exclude the password field from the returned user object
+    const { password: _, ...result } = user;
+    return result;
   }
 
   async login(user: any) {

@@ -17,6 +17,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from 'src/users/entities/user.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -35,7 +36,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalStrategy)
+  @UseGuards(AuthGuard('local')) // Use AuthGuard('local') here
   @ApiOperation({ summary: 'Login a user' })
   @ApiBody({ type: LoginUserDto })
   @ApiResponse({ status: 200, description: 'User successfully logged in.' })
@@ -48,11 +49,10 @@ export class AuthController {
     if (!email || !password) {
       throw new HttpException('Email and password are required', HttpStatus.BAD_REQUEST);
     }
-    console.log(req.user);
-    if (!req.user || !req.user.id) {
-      throw new HttpException('User not found or invalid user data', HttpStatus.UNAUTHORIZED);
-    }
 
+    if (!req.user || !req.user.id) {
+      throw new HttpException('User not found or Inalid user data ', HttpStatus.UNAUTHORIZED);
+    }
     const { access_token } = await this.authService.login(req.user);
     res.cookie('access_token', access_token, { httpOnly: true });
     return { message: 'Login successful', access_token };

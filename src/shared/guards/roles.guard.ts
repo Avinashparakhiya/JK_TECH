@@ -1,25 +1,36 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector, private usersService: UsersService) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Get required roles from metadata
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+
     if (!requiredRoles) {
-      return true;
+      return true; // If no roles are required, grant access
     }
+
+    // Extract user from the request
     const request = context.switchToHttp().getRequest();
-    const user = await this.usersService.getCurrentUser(); // Implement this method to get the current user from the JWT
+    const user = request.user; // Populated by JwtStrategy
+
     if (!user) {
-      throw new ForbiddenException('User not found.');
+      throw new HttpException('Authentication required. Please log in.', HttpStatus.UNAUTHORIZED);
     }
-    return requiredRoles.some((role) => user.role === role);
+
+    // Check if user has at least one of the required roles
+    const hasRole = requiredRoles.some((role) => user.role === role);
+    if (!hasRole) {
+      throw new ForbiddenException('Access denied: You do not have the necessary permissions to perform this action.');
+    }
+
+    return true; // Grant access if user has a required role
   }
 }
