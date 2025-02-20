@@ -12,53 +12,72 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService, // Inject JwtService
-  ) { }
+    private readonly jwtService: JwtService,
+  ) {}
 
   async create(registerUserDto: RegisterUserDto): Promise<User> {
-    const user = this.userRepository.create(registerUserDto);
-    user.role = 'viewer'; // Default role is viewer
-    return this.userRepository.save(user);
+    try {
+      const user = this.userRepository.create(registerUserDto);
+      user.role = 'viewer'; // Default role is viewer
+      return await this.userRepository.save(user);
+    } catch (error) {
+      throw new HttpException(`Error creating user: ${error.message}`, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async findAllActive(): Promise<User[]> {
-    return this.userRepository.find({ where: { isActive: true } });
+    try {
+      return await this.userRepository.find({ where: { isActive: true } });
+    } catch (error) {
+      throw new HttpException(`Error retrieving active users: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async findActiveById(id: string): Promise<User | null> {
     try {
       return await this.userRepository.findOne({ where: { id, isActive: true } });
     } catch (error) {
-      throw new HttpException(`Could not retrieve the user. Please try again later.-Error ${error}`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(`Error finding user with ID ${id}: ${error.message}`, HttpStatus.BAD_REQUEST);
     }
   }
-  
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+    try {
+      return await this.userRepository.findOne({ where: { email } });
+    } catch (error) {
+      throw new HttpException(`Error finding user by email: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    try {
+      return await this.userRepository.findOne({ where: { id } });
+    } catch (error) {
+      throw new HttpException(`Error finding user by ID: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto,currentUser): Promise<User> {
-    const user = await this.findActiveById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found.`);
-    }
-    // Only allow role changes if the current user is an admin
-    if (updateUserDto.role && updateUserDto.role !== user.role) {
-      if (!currentUser || currentUser.role !== 'admin') {
-        throw new ForbiddenException('Only admins can change roles.');
+  async update(id: string, updateUserDto: UpdateUserDto, currentUser: User): Promise<User> {
+    try {
+      const user = await this.findActiveById(id);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found.`);
       }
-    }
 
-    Object.assign(user, updateUserDto);
-    return this.userRepository.save(user);
+      if (updateUserDto.role && updateUserDto.role !== user.role) {
+        if (!currentUser || currentUser.role !== 'admin') {
+          throw new ForbiddenException('Only admins can change roles.');
+        }
+      }
+
+      Object.assign(user, updateUserDto);
+      return await this.userRepository.save(user);
+    } catch (error) {
+      throw new HttpException(`Error updating user: ${error.message}`, HttpStatus.BAD_REQUEST);
+    }
   }
 
-  async getCurrentUser(req: Request): Promise<User | null> {
+  async getCurrentUser(req: Request): Promise<User> {
     try {
       const authHeader = (req.headers as any)?.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -68,6 +87,7 @@ export class UsersService {
       const token = authHeader.split(' ')[1];
       const payload = this.jwtService.verify(token, { secret: '!@##$$%^&' }); // Use your actual secret
       const userId = payload.sub;
+
       if (!userId) {
         throw new UnauthorizedException('Invalid token payload.');
       }
@@ -79,17 +99,21 @@ export class UsersService {
 
       return user;
     } catch (error) {
-      console.error('Error in getCurrentUser:', error);
+      console.error('Error in getCurrentUser:', error.message);
       throw new UnauthorizedException('Failed to retrieve the current user.');
     }
   }
 
   async softDelete(id: string): Promise<void> {
-    const user = await this.findActiveById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found.`);
+    try {
+      const user = await this.findActiveById(id);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found.`);
+      }
+      user.isActive = false;
+      await this.userRepository.save(user);
+    } catch (error) {
+      throw new HttpException(`Error soft-deleting user: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    user.isActive = false;
-    await this.userRepository.save(user);
   }
 }
