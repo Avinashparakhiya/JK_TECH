@@ -17,13 +17,14 @@ export class Document {
   @Column()
   title: string;
 
-  @Column()
-  content: string;
+  // Change this column to handle binary content
+  @Column({ type: 'bytea' }) // For PostgreSQL, 'bytea' is used for binary data
+  content: Buffer;
 
   @Column()
   uploadedBy: string;
 
-  @ManyToOne(() => User, (user) => user.id) // Many documents can belong to one user
+  @ManyToOne(() => User, (user) => user.id, { nullable: false }) // Ensure the user is not null
   @JoinColumn({ name: 'userId' }) // This is the foreign key column
   user: User;
 
@@ -31,8 +32,8 @@ export class Document {
   createdAt: Date;
 
   @UpdateDateColumn()
-  modifiedAt: Date; // Add modifiedAt column to track updates
+  modifiedAt: Date;
 
   @Column({ default: true })
-  isActive: boolean; // Add isActive column with default value true
+  isActive: boolean;
 }

@@ -109,6 +109,6 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found.`);
     }
-    return this.usersService.softDelete(id);
+    await this.usersService.softDelete(id);
   }
 }

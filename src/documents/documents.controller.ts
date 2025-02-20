@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Get, Delete, Param, Put } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Get, Delete, Param, Put, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -6,14 +6,19 @@ import { Multer } from 'multer';
 import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { UsersService } from 'src/users/users.service';
+import { Request } from 'express';
 
 @ApiTags('documents')
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly usersService: UsersService, // Inject UsersService
+  ) { }
 
   @Post('upload')
-   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('editor', 'admin')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 1 * 1024 * 1024 } })) // 1 MB limit
   @ApiBearerAuth()
@@ -21,12 +26,33 @@ export class DocumentsController {
   @ApiResponse({ status: 201, description: 'Document uploaded successfully.' })
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  async uploadDocument(@UploadedFile() file: Multer.File) {
+  async uploadDocument(@UploadedFile() file: Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('File is required.');
     }
-    return this.documentsService.saveDocument(file);
+
+    try {
+      console.log('Uploaded file details:', {
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype,
+      });
+
+      // Extract the current user from the request
+      const currentUser = await this.usersService.getCurrentUser(req);
+
+      if (!currentUser) {
+        throw new BadRequestException('Unable to identify the current user.');
+      }
+
+      // Call the service to save the document
+      return await this.documentsService.saveDocument(file, currentUser);
+    } catch (error) {
+      console.error('Error in uploadDocument:', error.message);
+      throw new BadRequestException('Failed to upload document.');
+    }
   }
+
 
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)

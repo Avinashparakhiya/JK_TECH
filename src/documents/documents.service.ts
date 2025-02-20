@@ -12,35 +12,43 @@ export class DocumentsService {
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>, // Inject User repository to associate with documents
-  ) {}
+  ) { }
 
   /**
    * Save a document
    * @param file - The file uploaded by the user
    */
-  async saveDocument(file: Multer.File): Promise<Document> {
+  async saveDocument(file: Multer.File, currentUser: User): Promise<Document> {
     try {
-      const document = new Document();
-      document.title = file.originalname; // Set the document title from the uploaded file name
-      document.content = file.buffer.toString(); // Convert file buffer to string
-      document.uploadedBy = file.originalname; // Example placeholder; replace with user-specific details if needed
-
-      // Retrieve the user (if required) - for example, by some user identification (this can be added to the request)
-      const user = await this.userRepository.findOne({ where: { id: 'some-user-id' } }); // Replace with actual user ID from JWT or request context
-
-      if (user) {
-        document.user = user; // Associate the document with the user
+      if (!file) {
+        throw new HttpException('File is required.', HttpStatus.BAD_REQUEST);
       }
-
-      return await this.documentRepository.save(document); // Save the document to the database
+      if (!currentUser) {
+        throw new HttpException('Current user is required.', HttpStatus.BAD_REQUEST);
+      }
+  
+      const document = new Document();
+  
+      // Set document metadata
+      document.title = file.originalname;
+      document.content = file.buffer; // Store raw binary data
+      document.uploadedBy = currentUser.name || 'Unknown User';
+      document.user = currentUser;
+  
+      // Save the document to the database
+      const savedDocument = await this.documentRepository.save(document);
+  
+      console.log('Document saved successfully:', savedDocument);
+      return savedDocument;
     } catch (error) {
+      console.error('Error saving document:', error.message);
       throw new HttpException(
         `Failed to save document: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
-
+  
   async findAllWithUser(): Promise<Document[]> {
     try {
       return await this.documentRepository.find({ relations: ['user'] });
