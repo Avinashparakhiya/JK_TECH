@@ -1,15 +1,7 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { User } from 'src/users/entities/user.entity'; // Import User entity
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
-@Entity('documents')
+@Entity()
 export class Document {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -17,23 +9,24 @@ export class Document {
   @Column()
   title: string;
 
-  // Change this column to handle binary content
-  @Column({ type: 'bytea' }) // For PostgreSQL, 'bytea' is used for binary data
+  @Column('bytea')
   content: Buffer;
 
   @Column()
-  uploadedBy: string;
+  originalName: string;
 
-  @ManyToOne(() => User, (user) => user.id, { nullable: false }) // Ensure the user is not null
-  @JoinColumn({ name: 'userId' }) // This is the foreign key column
-  user: User;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  modifiedAt: Date;
+  @Column()
+  mimeType: string;
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  modifiedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.documents)
+  user: User;
 }
