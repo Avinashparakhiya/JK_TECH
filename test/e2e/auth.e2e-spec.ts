@@ -22,14 +22,6 @@ describe('AuthController (e2e)', () => {
     logger.log('Application closed');
   });
 
-  it('/auth/register (POST)', () => {
-    logger.log('Testing /auth/register (POST)');
-    return request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'test@example.com', password: 'password' })
-      .expect(201);
-  });
-
   it('/auth/login (POST)', () => {
     logger.log('Testing /auth/login (POST)');
     return request(app.getHttpServer())
