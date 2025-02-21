@@ -8,10 +8,10 @@ import { AuthGuard } from '@nestjs/passport';
 @ApiTags('ingestion')
 @Controller('ingestion')
 export class IngestionController {
-  constructor(private readonly ingestionService: IngestionService) {}
+  constructor(private readonly ingestionService: IngestionService) { }
 
   @Get('total-users-by-role')
-   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get total number of users by role' })

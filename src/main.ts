@@ -4,10 +4,29 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('SERVER_PORT') || 3000;
-  await app.listen(port);
-  Logger.log(`Server is running on http://localhost:${port}`, 'Bootstrap');
+  const logger = new Logger('Bootstrap');
+
+  try {
+    // Create the NestJS application
+    const app = await NestFactory.create(AppModule);
+
+    // Get ConfigService for environment configuration
+    const configService = app.get(ConfigService);
+    const port = configService.get<number>('SERVER_PORT') || 3000;
+    const env = configService.get<string>('NODE_ENV') || 'development';
+
+    // Set global prefix for API routes
+    app.setGlobalPrefix('api');
+
+    await app.listen(port);
+
+    logger.log(`Environment: ${env}`);
+    logger.log(`Server is running on http://localhost:${port}/api`);
+  } catch (error) {
+    const errorMessage = `Failed to start the server: ${error.message}`;
+    logger.error(errorMessage, error.stack);
+    process.exit(1); // Exit with error code
+  }
 }
+
 bootstrap();
