@@ -15,13 +15,10 @@ async function bootstrap() {
     const port = configService.get<number>('SERVER_PORT') || 3000;
     const env = configService.get<string>('NODE_ENV') || 'development';
 
-    // Set global prefix for API routes
-    app.setGlobalPrefix('api');
-
     await app.listen(port);
 
     logger.log(`Environment: ${env}`);
-    logger.log(`Server is running on http://localhost:${port}/api`);
+    logger.log(`Server is running on http://localhost:${port}`);
   } catch (error) {
     const errorMessage = `Failed to start the server: ${error.message}`;
     logger.error(errorMessage, error.stack);
